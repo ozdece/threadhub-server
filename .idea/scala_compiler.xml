@@ -2,6 +2,27 @@
 <project version="4">
   <component name="ScalaCompilerConfiguration">
     <option name="separateProdTestSources" value="true" />
-    <profile name="sbt 1" modules="threadhub-server,threadhub-server.main,threadhub-server.test" />
+    <profile name="sbt 1" modules="threadhub-server" />
+    <profile name="sbt 2" modules="threadhub-server.main">
+      <parameters>
+        <parameter value="-Yrangepos" />
+        <parameter value="-Wunused:imports" />
+        <parameter value="-Yrangepos" />
+        <parameter value="-P:semanticdb:targetroot:/home/cem/dev/project/scala/threadhub-server/target/scala-2.13/meta" />
+      </parameters>
+      <plugins>
+        <plugin path="$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scalameta/semanticdb-scalac_2.13.18/4.14.2/semanticdb-scalac_2.13.18-4.14.2.jar" />
+      </plugins>
+    </profile>
+    <profile name="sbt 3" modules="threadhub-server.test">
+      <parameters>
+        <parameter value="-Wunused:imports" />
+        <parameter value="-Yrangepos" />
+        <parameter value="-P:semanticdb:targetroot:/home/cem/dev/project/scala/threadhub-server/target/scala-2.13/test-meta" />
+      </parameters>
+      <plugins>
+        <plugin path="$USER_HOME$/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scalameta/semanticdb-scalac_2.13.18/4.14.2/semanticdb-scalac_2.13.18-4.14.2.jar" />
+      </plugins>
+    </profile>
   </component>
 </project>

@@ -1,11 +1,15 @@
 package com.ozdece.threadhub.server.rss
 
 sealed trait RSS20Property
-sealed trait RSSUpdatePeriod
+sealed trait SyndicationUpdatePeriod
 
-object RSSUpdatePeriod {
-  case object Hourly extends RSSUpdatePeriod
+object SyndicationUpdatePeriod {
+  case object Hourly  extends SyndicationUpdatePeriod
+  case object Daily   extends SyndicationUpdatePeriod
+  case object Weekly  extends SyndicationUpdatePeriod
+  case object Monthly extends SyndicationUpdatePeriod
+  case object Yearly  extends SyndicationUpdatePeriod
 }
 
-final case class SyndicationHint(updatePeriod: RSSUpdatePeriod, updateFrequency: Int)
+final case class Syndication(updatePeriod: SyndicationUpdatePeriod, updateFrequency: Int)
     extends RSS20Property

@@ -1,5 +1,7 @@
 package com.ozdece.threadhub.server.rss.parser
 
+import com.ozdece.threadhub.server.rss.Syndication
+import com.ozdece.threadhub.server.rss.SyndicationUpdatePeriod
 import com.ozdece.threadhub.server.rss.parser.RSS20ParserTest.missingMandatoryChannelFieldFile
 import com.ozdece.threadhub.server.rss.parser.RSS20ParserTest.rss20ResourceFile
 import org.scalatest.EitherValues
@@ -49,6 +51,15 @@ class RSS20ParserTest extends AnyFlatSpec with EitherValues with OptionValues {
     assertResult("https://yetkinreport.com/")(image.link)
     assertResult(32)(image.width.value)
     assertResult(32)(image.height.value)
+  }
+
+  "parse function" should "parse syndication property" in {
+    val rss = RSS20Parser.parse(rss20ResourceFile).value
+
+    val syndicationProperty = rss.properties.collect { case s: Syndication => s }.head
+
+    syndicationProperty.updatePeriod == SyndicationUpdatePeriod.Hourly
+    syndicationProperty.updateFrequency == 1
   }
 
 }

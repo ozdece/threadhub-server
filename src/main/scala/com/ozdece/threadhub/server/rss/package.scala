@@ -14,18 +14,17 @@ package object rss {
 
   // TODO: Add comments field later
   final case class Item(
-      id: String,
-      title: String,
+      title: Option[String],
       link: Option[String],
       description: Option[String],
       author: Option[String],
-      category: Seq[String],
-      pubDate: Option[ZonedDateTime],
+      categories: Seq[String],
+      publishedDate: Option[ZonedDateTime],
+      guid: Option[String],
       properties: Seq[ItemProperty]
   )
 
   final case class RSS20(
-      id: String,
       title: String,
       link: String,
       description: String,

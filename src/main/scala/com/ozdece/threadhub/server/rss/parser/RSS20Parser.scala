@@ -2,7 +2,14 @@ package com.ozdece.threadhub.server.rss.parser
 
 import cats.implicits.catsSyntaxOptionId
 import com.ozdece.threadhub.server.datetime.DateTimeParser
+import com.ozdece.threadhub.server.rss.ContentProperty
+import com.ozdece.threadhub.server.rss.DcProperty
 import com.ozdece.threadhub.server.rss.Image
+import com.ozdece.threadhub.server.rss.Item
+import com.ozdece.threadhub.server.rss.ItemProperty
+import com.ozdece.threadhub.server.rss.MediaContent
+import com.ozdece.threadhub.server.rss.MediaContentMedium
+import com.ozdece.threadhub.server.rss.MediaProperty
 import com.ozdece.threadhub.server.rss.RSS20
 import com.ozdece.threadhub.server.rss.RSS20Property
 import com.ozdece.threadhub.server.rss.Syndication
@@ -29,7 +36,6 @@ object RSS20Parser extends RSSParser[RSS20] {
       ttl   = channelTag.getChildTagOption("ttl").map(_.text.toInt)
       image = channelTag.getChildTagOption("image").flatMap(toChannelImage)
     } yield RSS20(
-      "",
       title,
       link,
       description,
@@ -37,7 +43,7 @@ object RSS20Parser extends RSSParser[RSS20] {
       ttl,
       image,
       channelTag.headOption.map(getChannelProperties).getOrElse(Seq.empty[RSS20Property]),
-      Seq.empty
+      getItems(channelTag)
     )
   }
 
@@ -71,6 +77,67 @@ object RSS20Parser extends RSSParser[RSS20] {
       case "MONTHLY" => SyndicationUpdatePeriod.Monthly.some
       case "YEARLY"  => SyndicationUpdatePeriod.Yearly.some
       case _         => None
+    }
+
+  private def getItems(channelTag: NodeSeq): Seq[Item] = (channelTag \\ "item").map(toItem)
+
+  private def toItem(itemNode: Node): Item = {
+    val categories = (itemNode \\ "category").map(_.text.trim)
+
+    Item(
+      itemNode.getChildTagOption("title").map(_.text.trim),
+      itemNode.getChildTagOption("link").map(_.text.trim),
+      itemNode.getChildTagOption("description").map(_.text.trim),
+      itemNode.getChildTagOption("author").map(_.text.trim),
+      categories,
+      itemNode
+        .getChildTagOption("pubDate")
+        .flatMap(node => DateTimeParser.parseZonedDateTime(node.text.trim)),
+      itemNode.getChildTagOption("guid").map(_.text.trim),
+      getItemProperties(itemNode)
+    )
+  }
+
+  private def getItemProperties(node: Node): Seq[ItemProperty] = {
+    val dcProperties      = node.child.filter(_.prefix == "dc")
+    val contentProperties = node.child.filter(_.prefix == "content")
+    val mediaProperties   = node.child.filter(_.prefix == "media")
+
+    Seq(
+      getDcProperty(dcProperties),
+      getContentProperty(contentProperties),
+      getMediaProperty(mediaProperties)
+    ).flatten
+  }
+
+  private def getDcProperty(dcNodes: NodeSeq): Option[DcProperty] =
+    dcNodes.find(_.label == "creator").map(node => DcProperty(node.text.trim))
+
+  private def getContentProperty(contentNodes: Seq[Node]): Option[ContentProperty] =
+    contentNodes.find(_.label == "encoded").map(node => ContentProperty(node.text.trim))
+
+  private def getMediaProperty(nodes: Seq[Node]): Option[MediaProperty] =
+    nodes.find(_.label == "content").flatMap(getMediaContent).map(MediaProperty)
+
+  private def getMediaContent(node: Node): Option[MediaContent] = {
+    val urlAttribute    = node.attribute("url")
+    val mediumAttribute = node.attribute("medium")
+
+    for {
+      url       <- urlAttribute.map(_.text.trim)
+      mediumStr <- mediumAttribute.map(_.text.trim)
+      medium    <- getMediaContentMedium(mediumStr)
+    } yield MediaContent(url, medium)
+  }
+
+  private def getMediaContentMedium(mediumStr: String): Option[MediaContentMedium] =
+    mediumStr.trim.toUpperCase match {
+      case "IMAGE"      => MediaContentMedium.Image.some
+      case "VIDEO"      => MediaContentMedium.Video.some
+      case "AUDIO"      => MediaContentMedium.Audio.some
+      case "DOCUMENT"   => MediaContentMedium.Document.some
+      case "EXECUTABLE" => MediaContentMedium.Executable.some
+      case _            => None
     }
 
 }

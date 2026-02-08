@@ -115,8 +115,8 @@ class RSS20ParserTest extends AnyFlatSpec with EitherValues with OptionValues {
     assertResult(expectedContentEncodedValue)(contentProperty.encoded)
     assertResult(
       "https://www.the-race.com/content/images/2026/02/JaguarTCSRacingChessConcept-09016.png"
-    )(mediaProperty.content.url)
-    assertResult(MediaContentMedium.Image)(mediaProperty.content.medium)
+    )(mediaProperty.content.value.url)
+    assertResult(MediaContentMedium.Image)(mediaProperty.content.value.medium)
   }
 
 }

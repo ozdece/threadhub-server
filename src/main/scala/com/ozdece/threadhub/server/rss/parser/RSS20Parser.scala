@@ -10,6 +10,7 @@ import com.ozdece.threadhub.server.rss.ItemProperty
 import com.ozdece.threadhub.server.rss.MediaContent
 import com.ozdece.threadhub.server.rss.MediaContentMedium
 import com.ozdece.threadhub.server.rss.MediaProperty
+import com.ozdece.threadhub.server.rss.MediaThumbnail
 import com.ozdece.threadhub.server.rss.RSS20
 import com.ozdece.threadhub.server.rss.RSS20Property
 import com.ozdece.threadhub.server.rss.Syndication
@@ -116,8 +117,17 @@ object RSS20Parser extends RSSParser[RSS20] {
   private def getContentProperty(contentNodes: Seq[Node]): Option[ContentProperty] =
     contentNodes.find(_.label == "encoded").map(node => ContentProperty(node.text.trim))
 
-  private def getMediaProperty(nodes: Seq[Node]): Option[MediaProperty] =
-    nodes.find(_.label == "content").flatMap(getMediaContent).map(MediaProperty)
+  private def getMediaProperty(nodes: Seq[Node]): Option[MediaProperty] = {
+    val content   = nodes.find(_.label == "content").flatMap(getMediaContent)
+    val thumbnail = nodes.find(_.label == "thumbnail").flatMap(getMediaThumbnail)
+
+    // If both content and thumbnail empty, then return nothing
+    if (content.isEmpty && thumbnail.isEmpty) {
+      None
+    } else {
+      MediaProperty(content, thumbnail).some
+    }
+  }
 
   private def getMediaContent(node: Node): Option[MediaContent] = {
     val urlAttribute    = node.attribute("url")
@@ -130,6 +140,13 @@ object RSS20Parser extends RSSParser[RSS20] {
     } yield MediaContent(url, medium)
   }
 
+  private def getMediaThumbnail(node: Node): Option[MediaThumbnail] = {
+    val width  = node.attribute("width").map(_.text.trim.toInt)
+    val height = node.attribute("height").map(_.text.trim.toInt)
+
+    node.attribute("url").map(seqOfNode => MediaThumbnail(seqOfNode.text.trim, width, height))
+  }
+
   private def getMediaContentMedium(mediumStr: String): Option[MediaContentMedium] =
     mediumStr.trim.toUpperCase match {
       case "IMAGE"      => MediaContentMedium.Image.some
@@ -139,5 +156,4 @@ object RSS20Parser extends RSSParser[RSS20] {
       case "EXECUTABLE" => MediaContentMedium.Executable.some
       case _            => None
     }
-
 }

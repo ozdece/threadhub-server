@@ -13,14 +13,13 @@ import org.scalatest.EitherValues
 import org.scalatest.OptionValues
 import org.scalatest.flatspec.AnyFlatSpec
 
-import java.io.InputStream
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import scala.io.Source
 
 class RSS20ParserTest extends AnyFlatSpec with EitherValues with OptionValues {
-
   "parse function" should "not parse if a mandatory field is missing" in {
     val rss = RSS20Parser.parse(missingMandatoryChannelFieldFile)
 
@@ -122,8 +121,12 @@ class RSS20ParserTest extends AnyFlatSpec with EitherValues with OptionValues {
 }
 
 object RSS20ParserTest {
-  def rss20ResourceFile: InputStream                = getClass.getResourceAsStream("/RSS20.xml")
-  def missingMandatoryChannelFieldFile: InputStream =
-    getClass.getResourceAsStream("/MissingMandatoryChannelField.xml")
-  def theRaceRSSResourceFile: InputStream = getClass.getResourceAsStream("/TheRaceRSS.xml")
+  def rss20ResourceFile: String =
+    Source.fromInputStream(getClass.getResourceAsStream("/RSS20.xml")).mkString
+  def missingMandatoryChannelFieldFile: String =
+    Source
+      .fromInputStream(getClass.getResourceAsStream("/MissingMandatoryChannelField.xml"))
+      .mkString
+  def theRaceRSSResourceFile: String =
+    Source.fromInputStream(getClass.getResourceAsStream("/TheRaceRSS.xml")).mkString
 }

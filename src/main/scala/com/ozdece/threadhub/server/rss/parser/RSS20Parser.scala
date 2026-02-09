@@ -16,15 +16,14 @@ import com.ozdece.threadhub.server.rss.RSS20Property
 import com.ozdece.threadhub.server.rss.Syndication
 import com.ozdece.threadhub.server.rss.SyndicationUpdatePeriod
 
-import java.io.InputStream
 import scala.xml.Node
 import scala.xml.NodeSeq
 import scala.xml.XML
 
 object RSS20Parser extends RSSParser[RSS20] {
 
-  override def parse(inputStream: InputStream): Either[RSSXmlParserException, RSS20] = {
-    val xml = XML.load(inputStream)
+  override def parse(xmlStr: String): Either[RSSXmlParserException, RSS20] = {
+    val xml = XML.loadString(xmlStr)
 
     for {
       channelTag  <- xml.getChildTag("channel")

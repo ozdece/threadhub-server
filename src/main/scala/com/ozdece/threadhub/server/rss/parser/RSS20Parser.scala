@@ -67,18 +67,8 @@ object RSS20Parser extends RSSParser[RSS20] {
   private def getSyndicationProperty(nodes: Seq[Node]): Option[Syndication] = for {
     updateFrequency <- nodes.find(_.label == "updateFrequency").map(_.text.trim.toInt)
     updatePeriodStr <- nodes.find(_.label == "updatePeriod")
-    updatePeriod    <- getUpdatePeriod(updatePeriodStr.text)
+    updatePeriod    <- SyndicationUpdatePeriod.withNameInsensitiveOption(updatePeriodStr.text.trim)
   } yield Syndication(updatePeriod, updateFrequency)
-
-  private def getUpdatePeriod(updatePeriodStr: String): Option[SyndicationUpdatePeriod] =
-    updatePeriodStr.trim.toUpperCase match {
-      case "HOURLY"  => SyndicationUpdatePeriod.Hourly.some
-      case "DAILY"   => SyndicationUpdatePeriod.Daily.some
-      case "WEEKLY"  => SyndicationUpdatePeriod.Weekly.some
-      case "MONTHLY" => SyndicationUpdatePeriod.Monthly.some
-      case "YEARLY"  => SyndicationUpdatePeriod.Yearly.some
-      case _         => None
-    }
 
   private def getItems(channelTag: NodeSeq): Seq[Item] = (channelTag \\ "item").map(toItem)
 
@@ -136,7 +126,7 @@ object RSS20Parser extends RSSParser[RSS20] {
     for {
       url       <- urlAttribute.map(_.text.trim)
       mediumStr <- mediumAttribute.map(_.text.trim)
-      medium    <- getMediaContentMedium(mediumStr)
+      medium    <- MediaContentMedium.withNameInsensitiveOption(mediumStr.trim)
     } yield MediaContent(url, medium)
   }
 
@@ -147,13 +137,4 @@ object RSS20Parser extends RSSParser[RSS20] {
     node.attribute("url").map(seqOfNode => MediaThumbnail(seqOfNode.text.trim, width, height))
   }
 
-  private def getMediaContentMedium(mediumStr: String): Option[MediaContentMedium] =
-    mediumStr.trim.toUpperCase match {
-      case "IMAGE"      => MediaContentMedium.Image.some
-      case "VIDEO"      => MediaContentMedium.Video.some
-      case "AUDIO"      => MediaContentMedium.Audio.some
-      case "DOCUMENT"   => MediaContentMedium.Document.some
-      case "EXECUTABLE" => MediaContentMedium.Executable.some
-      case _            => None
-    }
 }
